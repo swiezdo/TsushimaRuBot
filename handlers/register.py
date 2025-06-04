@@ -79,18 +79,20 @@ async def cmd_start(message: Message):
     await edit_or_send(message.bot, message.from_user.id,
                        "Привет! Чтобы вступить в сообщество Tsushima.ru, необходимо пройти небольшую регистрацию. После завершения вы получите ссылку для вступления в группу.",
                        reply_markup=start_keyboard())
-    await message.delete()
+    if message.chat.type == "private":
+        await message.delete()
 
 @router.callback_query(F.data == "start_registration")
 async def start_registration(callback: CallbackQuery):
-    await clear_registration_fields(callback.from_user.id)  # Очищаем данные при начале регистрации
+    await clear_registration_fields(callback.from_user.id)
     await DBFSM.set_state(callback.from_user.id, States.NAME)
     await edit_or_send(callback.bot, callback.from_user.id, "Введите ваше имя:")
     await callback.answer()
 
 @router.message()
 async def handle_text(message: Message):
-    await message.delete()
+    if message.chat.type == "private":
+        await message.delete()
     user_id = message.from_user.id
     state = await DBFSM.get_state(user_id)
 
