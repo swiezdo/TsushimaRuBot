@@ -47,6 +47,11 @@ level_mapping = {
     "hell": "HellMode",
 }
 
+# Эталонные списки для сортировки
+mode_order = ["Сюжет", "Выживание", "Испытания Иё", "Главы"]
+goal_order = ["Получение трофеев", "Узнать что-то новое", "Поиск тиммейтов"]
+level_order = ["Бронза", "Серебро", "Золото", "Платина", "Кошмар", "HellMode"]
+
 @router.message(
     F.chat.type == "private",  # Только в личке
     ~F.text                   # Только если это НЕ текст
@@ -106,7 +111,6 @@ async def handle_text(message: Message):
     user_id = message.from_user.id
     state = await DBFSM.get_state(user_id)
 
-    # Удаляем сообщение, только если оно не команда
     if not message.text.startswith("/"):
         try:
             await message.delete()
@@ -114,7 +118,6 @@ async def handle_text(message: Message):
             print(f"Не удалось удалить сообщение пользователя: {e}")
 
     if state == States.NAME:
-        # Валидация: только буквы, без пробелов и знаков
         if not re.fullmatch(r'[A-Za-zА-Яа-яЁё]+', message.text):
             error = await message.answer(
                 "❌ Имя должно содержать только буквы без пробелов и спецсимволов."
@@ -131,7 +134,6 @@ async def handle_text(message: Message):
         await edit_or_send(message.bot, user_id, "Введите ваш PSN ID:")
 
     elif state == States.PSN_ID:
-        # Валидация: только латиница, цифры, подчёркивания
         if not re.fullmatch(r'[A-Za-z0-9_]+', message.text):
             error = await message.answer(
                 "❌ PSN ID должен содержать только латиницу, цифры и нижние подчёркивания без пробелов."
@@ -173,7 +175,10 @@ async def choose_modes(callback: CallbackQuery):
     if new_mode not in modes_list:
         modes_list.append(new_mode)
 
-    updated_modes = ", ".join(modes_list)
+    # Сортировка
+    modes_list_sorted = sorted(modes_list, key=lambda x: mode_order.index(x))
+
+    updated_modes = ", ".join(modes_list_sorted)
     await update_user(callback.from_user.id, "modes", updated_modes)
     await callback.answer("Добавлено!")
 
@@ -194,7 +199,10 @@ async def choose_goals(callback: CallbackQuery):
     if new_goal not in goals_list:
         goals_list.append(new_goal)
 
-    updated_goals = ", ".join(goals_list)
+    # Сортировка
+    goals_list_sorted = sorted(goals_list, key=lambda x: goal_order.index(x))
+
+    updated_goals = ", ".join(goals_list_sorted)
     await update_user(callback.from_user.id, "goals", updated_goals)
     await callback.answer("Добавлено!")
 
@@ -215,6 +223,9 @@ async def choose_level(callback: CallbackQuery):
     if new_level not in levels_list:
         levels_list.append(new_level)
 
-    updated_levels = ", ".join(levels_list)
+    # Сортировка
+    levels_list_sorted = sorted(levels_list, key=lambda x: level_order.index(x))
+
+    updated_levels = ", ".join(levels_list_sorted)
     await update_user(callback.from_user.id, "level", updated_levels)
     await callback.answer("Добавлено!")
