@@ -14,7 +14,7 @@ def platform_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="💻 ПК", callback_data="platform_pc")],
-            [InlineKeyboardButton(text="🎮 PlayStation", callback_data="platform_playstation")],
+            [InlineKeyboardButton(text="🎮 PlayStation", callback_data="platform_playstation")]
         ]
     )
 
@@ -42,12 +42,9 @@ def goals_keyboard():
 def level_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="🥉 Бронза", callback_data="level_bronze")],
-            [InlineKeyboardButton(text="🥈 Серебро", callback_data="level_silver")],
-            [InlineKeyboardButton(text="🥇 Золото", callback_data="level_gold")],
-            [InlineKeyboardButton(text="🏅 Платина", callback_data="level_platinum")],
-            [InlineKeyboardButton(text="👻 Кошмар", callback_data="level_nightmare")],
-            [InlineKeyboardButton(text="🔥 HellMode", callback_data="level_hell")],
+            [InlineKeyboardButton(text="🥉 Бронза", callback_data="level_bronze"), InlineKeyboardButton(text="🥈 Серебро", callback_data="level_silver")],
+            [InlineKeyboardButton(text="🥇 Золото", callback_data="level_gold"), InlineKeyboardButton(text="🏅 Платина", callback_data="level_platinum")],
+            [InlineKeyboardButton(text="👻 Кошмар", callback_data="level_nightmare"), InlineKeyboardButton(text="🔥 HellMode", callback_data="level_hell")],
             [InlineKeyboardButton(text="✅ Готово", callback_data="level_done")]
         ]
     )
@@ -55,7 +52,7 @@ def level_keyboard():
 def after_register_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="🏯 Tsushima.ru", url=GROUP_LINK)],
+            [InlineKeyboardButton(text="🏯 Группа Tsushima.Ru", url=GROUP_LINK)],
             [InlineKeyboardButton(text="📜 Профиль", callback_data="view_profile")],
             [InlineKeyboardButton(text="🏁 Начало", callback_data="start_over")]
         ]

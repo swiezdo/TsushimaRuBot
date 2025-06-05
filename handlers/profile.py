@@ -93,12 +93,12 @@ async def profile_by_command(message: Message):
     user = await get_user(target_user_id)
 
     if user:
-        name = user[1] or "Не указано"
-        psn_id = user[2] or "Не указано"
-        platform = user[3] or "Не указано"
-        modes = user[4] or "Не указано"
-        goals = user[5] or "Не указано"
-        level = user[6] or "Не указано"
+        name = user[1] or "Не заполнено 🚫"
+        psn_id = user[2] or "Не заполнено 🚫"
+        platform = user[3] or "Не заполнено 🚫"
+        modes = user[4] or "Не заполнено 🚫"
+        goals = user[5] or "Не заполнено 🚫"
+        level = user[6] or "Не заполнено 🚫"
 
         profile_text = (
             "━━━━━━━━━━━━━━━\n"

@@ -1,3 +1,5 @@
+import re
+import asyncio
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
@@ -73,7 +75,7 @@ async def cmd_start(message: Message):
     await add_user(message.from_user.id)
     await DBFSM.set_state(message.from_user.id, States.START)
     await edit_or_send(message.bot, message.from_user.id,
-                       "Привет! Чтобы вступить в сообщество Tsushima.ru, необходимо пройти небольшую регистрацию. После завершения вы получите ссылку для вступления в группу.",
+                       "Привет! Чтобы вступить в сообщество Tsushima\u2060.Ru, необходимо пройти небольшую регистрацию. После завершения вы получите ссылку для вступления в группу.",
                        reply_markup=start_keyboard())
     if message.chat.type == "private":
         try:
@@ -93,7 +95,7 @@ async def handle_text(message: Message):
     user_id = message.from_user.id
     state = await DBFSM.get_state(user_id)
 
-    # Удаляем сообщение, только если оно не команда (например, не /start)
+    # Удаляем сообщение, только если оно не команда
     if not message.text.startswith("/"):
         try:
             await message.delete()
@@ -101,10 +103,35 @@ async def handle_text(message: Message):
             print(f"Не удалось удалить сообщение пользователя: {e}")
 
     if state == States.NAME:
+        # Валидация: только буквы, без пробелов и знаков
+        if not re.fullmatch(r'[A-Za-zА-Яа-яЁё]+', message.text):
+            error = await message.answer(
+                "❌ Имя должно содержать только буквы без пробелов и спецсимволов."
+            )
+            await asyncio.sleep(3)
+            try:
+                await error.delete()
+            except Exception:
+                pass
+            return
+
         await update_user(user_id, "name", message.text)
         await DBFSM.set_state(user_id, States.PSN_ID)
         await edit_or_send(message.bot, user_id, "Введите ваш PSN ID:")
+
     elif state == States.PSN_ID:
+        # Валидация: только латиница, цифры, подчёркивания
+        if not re.fullmatch(r'[A-Za-z0-9_]+', message.text):
+            error = await message.answer(
+                "❌ PSN ID должен содержать только латиницу, цифры и нижние подчёркивания без пробелов."
+            )
+            await asyncio.sleep(3)
+            try:
+                await error.delete()
+            except Exception:
+                pass
+            return
+
         await update_user(user_id, "psn_id", message.text)
         await DBFSM.set_state(user_id, States.PLATFORM)
         await edit_or_send(message.bot, user_id, "Выберите платформу:", reply_markup=platform_keyboard())
@@ -115,14 +142,14 @@ async def choose_platform(callback: CallbackQuery):
     platform = platform_mapping.get(key, key)
     await update_user(callback.from_user.id, "platform", platform)
     await DBFSM.set_state(callback.from_user.id, States.MODES)
-    await edit_or_send(callback.bot, callback.from_user.id, "Выберите режимы игры (несколько вариантов):", reply_markup=modes_keyboard())
+    await edit_or_send(callback.bot, callback.from_user.id, "Выберите режимы игры (можно несколько вариантов):", reply_markup=modes_keyboard())
     await callback.answer()
 
 @router.callback_query(F.data.startswith("mode_"))
 async def choose_modes(callback: CallbackQuery):
     if callback.data == "mode_done":
         await DBFSM.set_state(callback.from_user.id, States.GOALS)
-        await edit_or_send(callback.bot, callback.from_user.id, "Выберите цели участия (несколько вариантов):", reply_markup=goals_keyboard())
+        await edit_or_send(callback.bot, callback.from_user.id, "Выберите цели участия (можно несколько вариантов):", reply_markup=goals_keyboard())
         await callback.answer()
         return
 
