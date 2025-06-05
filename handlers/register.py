@@ -1,5 +1,3 @@
-# handlers/register.py
-
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
@@ -9,7 +7,6 @@ from utils.db_fsm import DBFSM
 
 router = Router()
 
-# Состояния
 class States:
     START = "start"
     NAME = "name"
@@ -21,7 +18,6 @@ class States:
     COMPLETE = "complete"
     PROFILE = "profile"
 
-# Маппинги
 platform_mapping = {
     "pc": "ПК",
     "playstation": "PlayStation",
@@ -51,7 +47,7 @@ level_mapping = {
 
 async def edit_or_send(bot, user_id, text, reply_markup=None):
     user = await get_user(user_id)
-    message_id = user[7]  # message_id
+    message_id = user[7]
     if message_id:
         try:
             await bot.edit_message_text(
@@ -80,7 +76,10 @@ async def cmd_start(message: Message):
                        "Привет! Чтобы вступить в сообщество Tsushima.ru, необходимо пройти небольшую регистрацию. После завершения вы получите ссылку для вступления в группу.",
                        reply_markup=start_keyboard())
     if message.chat.type == "private":
-        await message.delete()
+        try:
+            await message.delete()
+        except Exception:
+            pass
 
 @router.callback_query(F.data == "start_registration")
 async def start_registration(callback: CallbackQuery):
@@ -89,12 +88,17 @@ async def start_registration(callback: CallbackQuery):
     await edit_or_send(callback.bot, callback.from_user.id, "Введите ваше имя:")
     await callback.answer()
 
-@router.message()
+@router.message(F.chat.type == "private")
 async def handle_text(message: Message):
-    if message.chat.type == "private":
-        await message.delete()
     user_id = message.from_user.id
     state = await DBFSM.get_state(user_id)
+
+    # Удаляем сообщение, только если оно не команда (например, не /start)
+    if not message.text.startswith("/"):
+        try:
+            await message.delete()
+        except Exception as e:
+            print(f"Не удалось удалить сообщение пользователя: {e}")
 
     if state == States.NAME:
         await update_user(user_id, "name", message.text)
@@ -127,12 +131,11 @@ async def choose_modes(callback: CallbackQuery):
     key = callback.data.split("_", 1)[1]
     new_mode = mode_mapping.get(key, key)
 
-    modes_list = [m.strip() for m in current_modes.split(", ") if m.strip()]
+    modes_list = [m.strip() for m in current_modes.split(",") if m.strip()]
     if new_mode not in modes_list:
         modes_list.append(new_mode)
 
     updated_modes = ", ".join(modes_list)
-
     await update_user(callback.from_user.id, "modes", updated_modes)
     await callback.answer("Добавлено!")
 
@@ -149,12 +152,11 @@ async def choose_goals(callback: CallbackQuery):
     key = callback.data.split("_", 1)[1]
     new_goal = goal_mapping.get(key, key)
 
-    goals_list = [g.strip() for g in current_goals.split(", ") if g.strip()]
+    goals_list = [g.strip() for g in current_goals.split(",") if g.strip()]
     if new_goal not in goals_list:
         goals_list.append(new_goal)
 
     updated_goals = ", ".join(goals_list)
-
     await update_user(callback.from_user.id, "goals", updated_goals)
     await callback.answer("Добавлено!")
 
@@ -171,11 +173,10 @@ async def choose_level(callback: CallbackQuery):
     key = callback.data.split("_", 1)[1]
     new_level = level_mapping.get(key, key)
 
-    levels_list = [l.strip() for l in current_levels.split(", ") if l.strip()]
+    levels_list = [l.strip() for l in current_levels.split(",") if l.strip()]
     if new_level not in levels_list:
         levels_list.append(new_level)
 
     updated_levels = ", ".join(levels_list)
-
     await update_user(callback.from_user.id, "level", updated_levels)
     await callback.answer("Добавлено!")
