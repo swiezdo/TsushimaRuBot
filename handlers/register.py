@@ -1,7 +1,7 @@
 import re
 import asyncio
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, ContentType
 from aiogram.filters import Command
 from keyboards import start_keyboard, platform_keyboard, modes_keyboard, goals_keyboard, level_keyboard, after_register_keyboard
 from database import add_user, update_user, get_user
@@ -46,6 +46,17 @@ level_mapping = {
     "nightmare": "Кошмар",
     "hell": "HellMode",
 }
+
+@router.message(
+    F.chat.type == "private",  # Только в личке
+    ~F.text                   # Только если это НЕ текст
+)
+async def block_non_text(message: Message):
+    try:
+        await message.delete()
+        print(f"Удалено медиа от {message.from_user.id}")
+    except Exception as e:
+        print(f"Не удалось удалить медиа: {e}")
 
 async def edit_or_send(bot, user_id, text, reply_markup=None):
     user = await get_user(user_id)
