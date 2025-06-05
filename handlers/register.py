@@ -134,9 +134,12 @@ async def handle_text(message: Message):
         await edit_or_send(message.bot, user_id, "Введите ваш PSN ID:")
 
     elif state == States.PSN_ID:
-        if not re.fullmatch(r'[A-Za-z0-9_]+', message.text):
+        psn_id = message.text
+
+        # Проверка длины
+        if not (3 <= len(psn_id) <= 16):
             error = await message.answer(
-                "❌ PSN ID должен содержать только латиницу, цифры и нижние подчёркивания без пробелов."
+                "❌ PSN ID должен быть от 3 до 16 символов."
             )
             await asyncio.sleep(3)
             try:
@@ -145,7 +148,22 @@ async def handle_text(message: Message):
                 pass
             return
 
-        await update_user(user_id, "psn_id", message.text)
+        # Проверка формата
+        psn_pattern = r'^[a-zA-Z0-9](?!.*[.\-_]{2})[a-zA-Z0-9.\-_]{1,14}[a-zA-Z0-9]$'
+        if not re.fullmatch(psn_pattern, psn_id):
+            error = await message.answer(
+                "❌ PSN ID может содержать только латиницу, цифры и символы . - _.\n"
+                "❌ Нельзя начинать или заканчивать спецсимволом.\n"
+                "❌ Нельзя использовать подряд спецсимволы (.., --, __)."
+            )
+            await asyncio.sleep(3)
+            try:
+                await error.delete()
+            except Exception:
+                pass
+            return
+
+        await update_user(user_id, "psn_id", psn_id)
         await DBFSM.set_state(user_id, States.PLATFORM)
         await edit_or_send(message.bot, user_id, "Выберите платформу:", reply_markup=platform_keyboard())
 
