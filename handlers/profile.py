@@ -1,3 +1,4 @@
+import asyncio
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, Message
 from keyboards import after_register_keyboard, back_to_main_keyboard, start_keyboard
@@ -9,6 +10,11 @@ router = Router()
 
 async def edit_or_send(bot, user_id, text, reply_markup=None):
     user = await get_user(user_id)
+    if not user:
+        # Если пользователя нет — просто отправить новое сообщение
+        msg = await bot.send_message(user_id, text=text, reply_markup=reply_markup)
+        return
+
     message_id = user[7]
     if message_id:
         try:
@@ -44,7 +50,8 @@ def format_field_dynamic(label: str, value: str) -> str:
 async def view_profile(callback: CallbackQuery):
     await DBFSM.set_state(callback.from_user.id, States.PROFILE)
     user = await get_user(callback.from_user.id)
-    if user:
+
+    if user and user[1] and user[2]:  # user[1] — имя, user[2] — psn_id
         name = format_field_single(user[1])
         psn_id = format_field_single(user[2])
         platform = format_field_single(user[3])
@@ -62,11 +69,37 @@ async def view_profile(callback: CallbackQuery):
             f"{levels}\n"
             "━━━━━━━━━━━━━━━"
         )
-    else:
-        profile_text = "Профиль не найден."
+        await edit_or_send(callback.bot, callback.from_user.id, profile_text, reply_markup=back_to_main_keyboard())
+        await callback.answer()
 
-    await edit_or_send(callback.bot, callback.from_user.id, profile_text, reply_markup=back_to_main_keyboard())
-    await callback.answer()
+    else:
+        # Тут ПРАВИЛЬНАЯ логика обработки ошибки
+        # Создаём новое сообщение об ошибке
+        msg = await callback.bot.send_message(
+            chat_id=callback.from_user.id,
+            text="❌ Произошла ошибка. Пожалуйста, пройдите регистрацию заново."
+        )
+        # Сохраняем новый message_id
+        await update_user(callback.from_user.id, "message_id", msg.message_id)
+
+        # Переводим в START
+        await DBFSM.set_state(callback.from_user.id, States.START)
+
+        await callback.answer()
+
+        # Ждём 3 секунды
+        await asyncio.sleep(3)
+
+        # Редактируем сообщение в "стартовое"
+        try:
+            await callback.bot.edit_message_text(
+                chat_id=callback.from_user.id,
+                message_id=msg.message_id,
+                text="Привет! Чтобы вступить в сообщество Tsushima\u2060.Ru, необходимо пройти небольшую регистрацию. После завершения вы получите ссылку для вступления в группу.",
+                reply_markup=start_keyboard()
+            )
+        except Exception as e:
+            print(f"Ошибка при редактировании сообщения: {e}")
 
 @router.callback_query(F.data == "back_to_main")
 async def back_to_main(callback: CallbackQuery):
@@ -84,7 +117,6 @@ async def start_over(callback: CallbackQuery):
 
 @router.message(F.text == "!п")
 async def profile_by_command(message: Message):
-    # Определяем на кого смотрим: если reply — берем пользователя из reply
     if message.reply_to_message:
         target_user_id = message.reply_to_message.from_user.id
     else:
@@ -92,7 +124,7 @@ async def profile_by_command(message: Message):
 
     user = await get_user(target_user_id)
 
-    if user:
+    if user and user[1] and user[2]:  # user[1] — имя, user[2] — psn_id
         name = user[1] or "Не заполнено 🚫"
         psn_id = user[2] or "Не заполнено 🚫"
         platform = user[3] or "Не заполнено 🚫"
@@ -110,11 +142,14 @@ async def profile_by_command(message: Message):
             f"🏆 Сложности: {level}\n"
             "━━━━━━━━━━━━━━━"
         )
-    else:
-        profile_text = "Пользователь не зарегистрирован."
-
-    try:
-        # Делаем ответ reply на "!п"
         await message.reply(profile_text)
-    except Exception as e:
-        print(f"Ошибка при отправке профиля: {e}")
+    else:
+        if user:
+            from database import delete_user
+            await delete_user(target_user_id)
+
+        # Если профиль кривой, говорим об этом в ответ на "!п"
+        try:
+            await message.reply("❌ Пользователь не зарегистрирован или регистрация некорректна.")
+        except Exception as e:
+            print(f"Ошибка при отправке сообщения: {e}")
