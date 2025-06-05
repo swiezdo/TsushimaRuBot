@@ -33,12 +33,12 @@ async def edit_or_send(bot, user_id, text, reply_markup=None):
 
 def format_field_single(value: str) -> str:
     if not value or value.strip() == "":
-        return "Не заполнено 🚫"
+        return "Не заполнено"
     return value.strip()
 
 def format_field_dynamic(label: str, value: str) -> str:
     if not value or value.strip() == "":
-        return f"{label}: Не заполнено 🚫"
+        return f"{label}: Не заполнено"
     items = [v.strip() for v in value.split(",") if v.strip()]
     if len(items) == 1:
         return f"{label}: {items[0]}"
@@ -125,12 +125,12 @@ async def profile_by_command(message: Message):
     user = await get_user(target_user_id)
 
     if user and user[1] and user[2]:  # user[1] — имя, user[2] — psn_id
-        name = user[1] or "Не заполнено 🚫"
-        psn_id = user[2] or "Не заполнено 🚫"
-        platform = user[3] or "Не заполнено 🚫"
-        modes = user[4] or "Не заполнено 🚫"
-        goals = user[5] or "Не заполнено 🚫"
-        level = user[6] or "Не заполнено 🚫"
+        name = user[1]
+        psn_id = user[2]
+        platform = user[3] or "Не заполнено"
+        modes = user[4] or "Не заполнено"
+        goals = user[5] or "Не заполнено"
+        level = user[6] or "Не заполнено"
 
         profile_text = (
             "━━━━━━━━━━━━━━━\n"
@@ -146,9 +146,8 @@ async def profile_by_command(message: Message):
     else:
         if user:
             from database import delete_user
-            await delete_user(target_user_id)
+            await delete_user(target_user_id)  # ❗ Удаляем кривую анкету
 
-        # Если профиль кривой, говорим об этом в ответ на "!п"
         try:
             await message.reply("❌ Пользователь не зарегистрирован или регистрация некорректна.")
         except Exception as e:
