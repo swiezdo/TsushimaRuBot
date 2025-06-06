@@ -5,7 +5,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from config import BOT_TOKEN
 from database import init_db
-from handlers import register, profile, group
+from handlers import register, profile, group, clean
 
 async def main():
     logging.basicConfig(
@@ -24,7 +24,8 @@ async def main():
     dp.include_routers(
         register.router,
         profile.router,
-        group.router
+        group.router,
+        clean.router
     )
 
     await dp.start_polling(bot)

@@ -37,3 +37,9 @@ async def delete_user(user_id: int):
     async with aiosqlite.connect(DATABASE) as db:
         await db.execute("DELETE FROM users WHERE user_id = ?", (user_id,))
         await db.commit()
+
+async def get_all_users():
+    async with aiosqlite.connect(DATABASE) as db:
+        cursor = await db.execute("SELECT user_id FROM users")
+        rows = await cursor.fetchall()
+        return rows        
