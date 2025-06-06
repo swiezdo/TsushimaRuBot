@@ -1,7 +1,17 @@
 # config.py
 
-BOT_TOKEN = "7591213168:AAGllB3-xLOmIlkm0v5th1ffOa73kXsLvYc"
+from dotenv import load_dotenv
+import os
 
+# Загружаем переменные из .env файла
+load_dotenv()
+
+# Токен бота
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+# Проверка на наличие токена (очень рекомендую)
+if not BOT_TOKEN:
+    raise ValueError("❌ BOT_TOKEN не найден в .env файле!")
 
 # Путь к базе данных
 DATABASE = "users.db"
