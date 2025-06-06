@@ -11,11 +11,9 @@
 ### 1. Клонирование репозитория
 
 ```bash
-git clone git@github.com:swiezdo/TsushimaRuBot.git
+git clone https://github.com/swiezdo/TsushimaRuBot.git
 cd TsushimaRuBot
 ```
-
-> **Важно:** используется доступ через SSH. Убедитесь, что настроен SSH-ключ для GitHub.
 
 ---
 
@@ -112,15 +110,7 @@ sudo systemctl status tsushimarubot.service
 
 ---
 
-### 7. Служба для SQLite Web (опционально)
-
-Если требуется веб-интерфейс для управления базой:
-
-Установка SQLite Web:
-
-```bash
-pip install sqlite-web
-```
+### 7. Служба для SQLite Web
 
 Создание службы:
 
@@ -242,5 +232,6 @@ users.db
 ```txt
 aiogram==3.18.0
 aiosqlite==0.19.0
+sqlite-web==0.6.4
 python-dotenv==1.1.0
 ```
