@@ -117,10 +117,16 @@ async def start_over(callback: CallbackQuery):
 
 @router.message(F.text == "!п")
 async def profile_by_command(message: Message):
-    if message.reply_to_message:
+    # Игнорируем, если команда вызвана внутри топика (темы)
+    if message.is_topic_message:
+        return
+
+    from_user_id = message.from_user.id
+
+    if message.reply_to_message and message.reply_to_message.from_user.id != from_user_id:
         target_user_id = message.reply_to_message.from_user.id
     else:
-        target_user_id = message.from_user.id
+        target_user_id = from_user_id
 
     user = await get_user(target_user_id)
 

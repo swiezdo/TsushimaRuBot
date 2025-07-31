@@ -1,5 +1,3 @@
-# config.py
-
 from dotenv import load_dotenv
 import os
 
@@ -17,4 +15,4 @@ if not BOT_TOKEN:
 DATABASE = "users.db"
 
 # Ссылка на группу
-GROUP_LINK = "https://t.me/+E_uWXhSD5HQ0YWUy"
+GROUP_LINK = "https://t.me/+ZFiVYVrz-PEzYjBi"
